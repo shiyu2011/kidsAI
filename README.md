@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# kidsAI
 
-## Getting Started
+AI that builds thinkers, not answer-seekers. A safe AI learning coach for kids aged 8-12.
 
-First, run the development server:
+**Live:** https://kidsai-fawn.vercel.app
+
+## What it does
+
+- Kids chat with **SeanSean**, an AI buddy that rewards thinking effort
+- Parents see a dashboard with effort metrics, trend charts, and conversation transcripts
+- Admin dashboard for platform-wide monitoring (`/admin`)
+
+## Tech stack
+
+- **Frontend:** Next.js 16 (App Router, Turbopack)
+- **AI:** OpenAI GPT-5.2 with SSE streaming
+- **Database:** Prisma 7 + SQLite (dev) / Turso (prod)
+- **Auth:** JWT via `jose` + `bcryptjs`
+- **Hosting:** Vercel + Turso cloud
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your keys
+
+# Run database migration
+npx prisma migrate dev
+
+# Seed test accounts (optional)
+npx tsx prisma/seed.ts
+
+# Start dev server
+npm run dev -- -H 0.0.0.0
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | SQLite path (dev) or Turso URL (prod) |
+| `DATABASE_AUTH_TOKEN` | Turso auth token (prod only) |
+| `JWT_SECRET` | Secret for signing JWTs |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `AI_MODEL` | Model name (default: `gpt-4o-mini`) |
+| `ADMIN_EMAIL` | Admin account email (for seed script) |
+| `ADMIN_PASSWORD` | Admin account password (for seed script) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project structure
 
-## Learn More
+```
+src/
+  app/
+    page.tsx          # Landing page
+    login/            # Parent login
+    signup/           # Parent signup
+    dashboard/        # Parent dashboard (metrics, transcripts)
+    admin/            # Admin dashboard (all parents/kids/usage)
+    chat/[token]/     # Kid chat interface
+    api/
+      auth/           # Login, signup, me
+      chat/           # AI chat with streaming (SSE)
+      children/       # CRUD child profiles
+      sessions/       # Create/list sessions (daily cap)
+      dashboard/      # Stats endpoint
+      admin/          # Admin overview endpoint
+  lib/
+    db.ts             # Prisma client singleton
+    auth.ts           # JWT + password hashing
+    auth-middleware.ts # Extract parent ID from request
+    admin-middleware.ts # Admin-only route guard
+    system-prompt.ts  # AI personality and behavior rules
+    effort.ts         # Effort classification (lazy/trying/thinking/breakthrough)
+    api-client.ts     # Frontend API helpers
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Safety features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- DB-based rate limiting (30 msgs/min per session)
+- Daily session cap (10 sessions/day per parent)
+- Max 20 turns per session
+- Input validation and message length cap (2000 chars)
+- Access tokens stripped from API responses
+- `max_completion_tokens: 150` to control AI response length

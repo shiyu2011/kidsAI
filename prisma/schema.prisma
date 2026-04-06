@@ -12,6 +12,7 @@ model Parent {
   email          String         @unique
   hashedPassword String
   coppaConsent   Boolean        @default(false)
+  isAdmin        Boolean        @default(false)
   createdAt      DateTime       @default(now())
   children       ChildProfile[]
 }
