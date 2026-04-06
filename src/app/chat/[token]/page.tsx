@@ -8,15 +8,33 @@ interface Message {
   content: string;
 }
 
-const SUGGESTIONS = [
+const ALL_SUGGESTIONS = [
   { label: "Help me with fractions", icon: "🔢" },
   { label: "Explain black holes", icon: "🌌" },
   { label: "Write a story about a dragon", icon: "🐉" },
   { label: "Debug my code", icon: "💻" },
+  { label: "Why is the sky blue?", icon: "🌤️" },
+  { label: "Tell me about dinosaurs", icon: "🦕" },
+  { label: "How do volcanoes work?", icon: "🌋" },
+  { label: "Write a poem about space", icon: "🚀" },
+  { label: "What are atoms made of?", icon: "⚛️" },
+  { label: "Help me make a game idea", icon: "🎮" },
+  { label: "How do animals talk?", icon: "🐬" },
+  { label: "What's inside the Earth?", icon: "🌍" },
+  { label: "Write a song about pizza", icon: "🍕" },
+  { label: "How does the internet work?", icon: "🌐" },
+  { label: "Tell me a weird science fact", icon: "🧪" },
+  { label: "What lives in the deep ocean?", icon: "🐙" },
 ];
+
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
 
 export default function ChatPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
+  const [suggestions] = useState(() => pickRandom(ALL_SUGGESTIONS, 4));
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -169,7 +187,7 @@ export default function ChatPage({ params }: { params: Promise<{ token: string }
                 answers. I&apos;ll help you figure things out yourself!
               </p>
               <div className="flex flex-wrap justify-center gap-2">
-                {SUGGESTIONS.map((s) => (
+                {suggestions.map((s) => (
                   <button
                     key={s.label}
                     onClick={() => handleSuggestion(s.label)}

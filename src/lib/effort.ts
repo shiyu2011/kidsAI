@@ -1,9 +1,8 @@
 export type EffortLevel = "lazy" | "trying" | "thinking" | "breakthrough";
 
 const LAZY_PATTERNS = [
-  /^(what is|what's|whats) .{0,30}$/i,
-  /^(solve|answer|tell me|help me|do|give me|explain)(\s|$)/i,
-  /^.{0,10}$/,  // Very short messages
+  /^(solve|answer|do|give me)(\s|$)/i,
+  /^.{0,5}$/,  // Very short messages (single word)
 ];
 
 const EFFORT_INDICATORS = [
@@ -22,6 +21,16 @@ const EFFORT_INDICATORS = [
   /first.*(then|next|after)/i,
   /step \d/i,
   /\d\s*[+\-*/÷×=]\s*\d/,  // Math expressions (showing work)
+  /why/i,           // Asking why shows curiosity
+  /how (does|do|can|would|is)/i, // Asking how things work
+  /\?/,             // Any question is engagement
+  /want to/i,       // Expressing desire to learn/create
+  /can (we|you|i)/i, // Requesting collaboration
+  /like/i,          // Expressing preference
+  /tell me about/i, // Curiosity
+  /help me/i,       // Asking for help is engagement
+  /explain/i,       // Wanting to understand
+  /what about/i,    // Follow-up thinking
 ];
 
 export function classifyEffort(message: string): EffortLevel {
@@ -44,14 +53,15 @@ export function classifyEffort(message: string): EffortLevel {
   // Count effort signals
   const effortSignals = EFFORT_INDICATORS.filter((p) => p.test(trimmed)).length;
 
-  // Lazy pattern wins unless there are strong effort signals (reasoning + math)
-  if (isLazyPattern && effortSignals < 2) return "lazy";
+  // Lazy pattern wins only if zero effort signals
+  if (isLazyPattern && effortSignals === 0) return "lazy";
 
-  if (effortSignals >= 3) return "thinking";
+  if (effortSignals >= 3) return "breakthrough";
+  if (effortSignals >= 2) return "thinking";
   if (effortSignals >= 1) return "trying";
 
-  // Medium-length message with some specificity but no explicit effort markers
-  if (trimmed.length > 30 && trimmed.includes("?")) return "trying";
+  // Any message with reasonable length shows engagement
+  if (trimmed.length > 15) return "trying";
 
   return "lazy";
 }

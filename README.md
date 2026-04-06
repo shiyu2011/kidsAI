@@ -1,6 +1,6 @@
 # kidsAI
 
-AI that builds thinkers, not answer-seekers. A safe AI learning coach for kids aged 8-12.
+AI that builds thinkers, not answer-seekers. A safe AI learning coach for kids and young learners.
 
 **Live:** https://kidsai-fawn.vercel.app
 

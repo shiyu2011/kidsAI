@@ -12,7 +12,7 @@ export default function Home() {
           AI that builds thinkers, not answer-seekers.
         </p>
         <p className="text-gray-500 mb-8">
-          A safe AI learning coach for kids aged 8-12. SeanSean won&apos;t give your child answers
+          A safe AI learning coach for kids and young learners. SeanSean won&apos;t give your child answers
           — she&apos;ll help them figure things out themselves.
         </p>
 

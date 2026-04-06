@@ -8,11 +8,8 @@ describe("classifyEffort", () => {
       expect(classifyEffort("")).toBe("lazy");
     });
 
-    it("classifies direct answer requests as lazy", () => {
-      expect(classifyEffort("what is 2+2")).toBe("lazy");
+    it("classifies bare commands as lazy", () => {
       expect(classifyEffort("solve this problem")).toBe("lazy");
-      expect(classifyEffort("tell me the answer")).toBe("lazy");
-      expect(classifyEffort("help me")).toBe("lazy");
       expect(classifyEffort("give me the answer")).toBe("lazy");
     });
 
@@ -26,13 +23,16 @@ describe("classifyEffort", () => {
   describe("trying inputs", () => {
     it("classifies messages with some reasoning as trying", () => {
       expect(classifyEffort("I think the answer might be 4")).toBe("trying");
-      expect(classifyEffort("I know fractions need common denominators")).toBe("trying");
     });
 
-    it("classifies specific questions with context as trying", () => {
-      expect(
-        classifyEffort("How do I find the area of a triangle that has a base of 10?")
-      ).toBe("trying");
+    it("classifies questions as trying (curiosity counts)", () => {
+      expect(classifyEffort("what is 2+2")).toBe("trying");
+      expect(classifyEffort("tell me the answer")).toBe("trying");
+      expect(classifyEffort("help me with this")).toBe("trying");
+    });
+
+    it("classifies medium-length messages as trying", () => {
+      expect(classifyEffort("I want to learn about dinosaurs")).toBe("trying");
     });
   });
 
@@ -40,31 +40,41 @@ describe("classifyEffort", () => {
     it("classifies messages with multiple reasoning indicators as thinking", () => {
       expect(
         classifyEffort(
-          "I think I need to find a common denominator because the fractions have different bases. What if I multiply 3 and 4?"
-        )
-      ).toBe("thinking");
-    });
-
-    it("classifies messages with step-by-step reasoning as thinking", () => {
-      expect(
-        classifyEffort(
-          "I tried step 1: convert to same denominator. I got 8/12 and 3/12. I think the answer is 11/12 because 8+3=11"
+          "I think I need to find a common denominator because the fractions have different bases"
         )
       ).toBe("thinking");
     });
   });
 
-  describe("edge cases", () => {
-    it("handles messages with just question marks as trying", () => {
+  describe("breakthrough inputs", () => {
+    it("classifies messages with rich reasoning as breakthrough", () => {
       expect(
-        classifyEffort("Can you help me understand how photosynthesis works in plants?")
-      ).toBe("trying");
+        classifyEffort(
+          "I think I need to find a common denominator because the fractions have different bases. What if I multiply 3 and 4?"
+        )
+      ).toBe("breakthrough");
     });
 
-    it("handles long thoughtful messages with homework-like length", () => {
+    it("classifies step-by-step reasoning as breakthrough", () => {
+      expect(
+        classifyEffort(
+          "I tried step 1: convert to same denominator. I got 8/12 and 3/12. I think the answer is 11/12 because 8+3=11"
+        )
+      ).toBe("breakthrough");
+    });
+
+    it("classifies long thoughtful messages as breakthrough", () => {
       const thoughtful =
         "I think the problem is asking about velocity, because I know velocity is speed with direction. I tried using the formula v = d/t and I got 60, but I'm not sure if that's right because the problem mentions acceleration too. What if I need to use a different formula?";
-      expect(classifyEffort(thoughtful)).toBe("thinking");
+      expect(classifyEffort(thoughtful)).toBe("breakthrough");
+    });
+  });
+
+  describe("edge cases", () => {
+    it("handles questions with context as breakthrough (multiple curiosity signals)", () => {
+      expect(
+        classifyEffort("Can you help me understand how photosynthesis works in plants?")
+      ).toBe("breakthrough");
     });
   });
 });
