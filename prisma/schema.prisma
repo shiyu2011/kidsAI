@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Parent {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  hashedPassword String
+  coppaConsent   Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  children       ChildProfile[]
+}
+
+model ChildProfile {
+  id          String    @id @default(cuid())
+  parentId    String
+  displayName String
+  createdAt   DateTime  @default(now())
+  parent      Parent    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  sessions    Session[]
+}
+
+model Session {
+  id          String    @id @default(cuid())
+  childId     String
+  topic       String?
+  accessToken String    @unique
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  child       ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  turns       Turn[]
+}
+
+model Turn {
+  id          String   @id @default(cuid())
+  sessionId   String
+  role        String   // "kid" | "ai"
+  content     String
+  effortScore Int      @default(0) // 0=lazy, 1=trying, 2=thinking, 3=breakthrough
+  createdAt   DateTime @default(now())
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
