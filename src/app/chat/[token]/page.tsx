@@ -34,7 +34,8 @@ function pickRandom<T>(arr: T[], n: number): T[] {
 
 export default function ChatPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
-  const [suggestions] = useState(() => pickRandom(ALL_SUGGESTIONS, 4));
+  const [suggestions, setSuggestions] = useState(ALL_SUGGESTIONS.slice(0, 4));
+  const [suggestionsReady, setSuggestionsReady] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -45,6 +46,11 @@ export default function ChatPage({ params }: { params: Promise<{ token: string }
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    setSuggestions(pickRandom(ALL_SUGGESTIONS, 4));
+    setSuggestionsReady(true);
+  }, []);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -187,7 +193,7 @@ export default function ChatPage({ params }: { params: Promise<{ token: string }
                 answers. I&apos;ll help you figure things out yourself!
               </p>
               <div className="flex flex-wrap justify-center gap-2">
-                {suggestions.map((s) => (
+                {suggestionsReady && suggestions.map((s) => (
                   <button
                     key={s.label}
                     onClick={() => handleSuggestion(s.label)}
