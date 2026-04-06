@@ -130,6 +130,7 @@ export default function DashboardPage() {
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [newChildName, setNewChildName] = useState("");
   const [showAddChild, setShowAddChild] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -173,9 +174,14 @@ export default function DashboardPage() {
   }
 
   async function handleStartSession(childId: string) {
-    const { accessToken } = await createSession(childId);
-    window.open(`/chat/${accessToken}`, "_blank");
-    loadData();
+    setErrorMessage(null);
+    try {
+      const { accessToken } = await createSession(childId);
+      window.open(`/chat/${accessToken}`, "_blank");
+      loadData();
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Something went wrong");
+    }
   }
 
   function handleLogout() {
@@ -321,6 +327,18 @@ export default function DashboardPage() {
             </button>
           )}
         </div>
+
+        {errorMessage && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-red-900">Oops!</h3>
+                <p className="text-sm text-red-700 mt-1">{errorMessage}</p>
+              </div>
+              <button onClick={() => setErrorMessage(null)} className="text-red-400 hover:text-red-600 text-lg">&times;</button>
+            </div>
+          </div>
+        )}
 
         {showAddChild && (
           <div className="bg-white border border-gray-200 rounded-xl p-4 flex gap-2">

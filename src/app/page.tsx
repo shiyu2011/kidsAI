@@ -19,12 +19,6 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
-            href="/chat"
-            className="px-8 py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition text-center"
-          >
-            Continue Previous Session (Kid)
-          </Link>
-          <Link
             href="/signup"
             className="px-8 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition text-center"
           >

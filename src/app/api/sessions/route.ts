@@ -49,6 +49,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Daily session cap: max 10 sessions per parent per day
+    const DAILY_SESSION_CAP = 10;
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todaySessions = await prisma.session.count({
+      where: {
+        child: { parentId },
+        startedAt: { gte: todayStart },
+      },
+    });
+    if (todaySessions >= DAILY_SESSION_CAP) {
+      return NextResponse.json(
+        { error: `Daily limit reached (${DAILY_SESSION_CAP} sessions/day). Come back tomorrow! Want more access or have feedback? Email shiyu.xu@precisionxbio.com` },
+        { status: 429 }
+      );
+    }
+
     const accessToken = crypto.randomBytes(32).toString("hex");
 
     const session = await prisma.session.create({

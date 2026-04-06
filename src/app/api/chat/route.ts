@@ -6,26 +6,12 @@ import OpenAI from "openai";
 
 const MAX_TURNS = 20;
 const MAX_MESSAGE_LENGTH = 2000;
+const RATE_LIMIT = 30; // max kid messages per window
+const RATE_WINDOW_MS = 60_000; // 1 minute
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || "",
 });
-
-// Simple in-memory rate limiter (per access token)
-const rateLimiter = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 30; // max messages per window
-const RATE_WINDOW = 60_000; // 1 minute
-
-function isRateLimited(key: string): boolean {
-  const now = Date.now();
-  const entry = rateLimiter.get(key);
-  if (!entry || now > entry.resetAt) {
-    rateLimiter.set(key, { count: 1, resetAt: now + RATE_WINDOW });
-    return false;
-  }
-  entry.count++;
-  return entry.count > RATE_LIMIT;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,13 +23,6 @@ export async function POST(request: NextRequest) {
       return new Response(
         JSON.stringify({ error: "Message and accessToken are required" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    if (isRateLimited(accessToken)) {
-      return new Response(
-        JSON.stringify({ error: "Slow down! Too many messages. Try again in a minute." }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -70,8 +49,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Count kid turns
-    const kidTurnCount = session.turns.filter((t) => t.role === "kid").length;
+    // DB-based rate limit: count kid turns in this session within the last minute
+    const windowStart = new Date(Date.now() - RATE_WINDOW_MS);
+    const recentCount = await prisma.turn.count({
+      where: {
+        sessionId: session.id,
+        role: "kid",
+        createdAt: { gte: windowStart },
+      },
+    });
+    if (recentCount >= RATE_LIMIT) {
+      return new Response(
+        JSON.stringify({ error: "Slow down! Too many messages. Try again in a minute. Want more access or have feedback? Email shiyu.xu@precisionxbio.com" }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // DB-based turn count (atomic — prevents race conditions on double-click)
+    const kidTurnCount = await prisma.turn.count({
+      where: { sessionId: session.id, role: "kid" },
+    });
     if (kidTurnCount >= MAX_TURNS) {
       await prisma.session.update({
         where: { id: session.id },
