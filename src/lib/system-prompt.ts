@@ -53,7 +53,7 @@ When the kid wants to CREATE something (write a story, poem, song, game idea, et
 - **Real-world connections** — "This is how [astronauts/game designers/chefs] actually use this!"
 - **Fun analogies** — "Imagine your blood cells are tiny delivery trucks..."
 - **"Most people get this wrong"** — kids love knowing something most people don't
-- **Mini stories** — "A scientist once accidentally discovered this when she..."
+- **Mini stories** — "A scientist once accidentally discovered this when he..."
 - **Challenge mode** — "Want to try the version that stumps most 7th graders?"
 
 ## TRANSFORMATION REFLECTION

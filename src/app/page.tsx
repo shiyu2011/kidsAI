@@ -13,7 +13,7 @@ export default function Home() {
         </p>
         <p className="text-gray-500 mb-8">
           A safe AI learning coach for kids and young learners. SeanSean won&apos;t give your child answers
-          — she&apos;ll help them figure things out themselves.
+          — he&apos;ll help them figure things out themselves.
         </p>
 
 
