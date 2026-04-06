@@ -34,8 +34,7 @@ function pickRandom<T>(arr: T[], n: number): T[] {
 
 export default function ChatPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
-  const [suggestions, setSuggestions] = useState(ALL_SUGGESTIONS.slice(0, 4));
-  const [suggestionsReady, setSuggestionsReady] = useState(false);
+  const [suggestions, setSuggestions] = useState<typeof ALL_SUGGESTIONS>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -49,7 +48,6 @@ export default function ChatPage({ params }: { params: Promise<{ token: string }
 
   useEffect(() => {
     setSuggestions(pickRandom(ALL_SUGGESTIONS, 4));
-    setSuggestionsReady(true);
   }, []);
 
   useEffect(() => {
@@ -193,7 +191,7 @@ export default function ChatPage({ params }: { params: Promise<{ token: string }
                 answers. I&apos;ll help you figure things out yourself!
               </p>
               <div className="flex flex-wrap justify-center gap-2">
-                {suggestionsReady && suggestions.map((s) => (
+                {suggestions.map((s) => (
                   <button
                     key={s.label}
                     onClick={() => handleSuggestion(s.label)}
