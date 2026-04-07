@@ -2,9 +2,11 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { classifyEffort, effortToScore } from "@/lib/effort";
 import { buildSystemPrompt } from "@/lib/system-prompt";
+import { detectProject } from "@/lib/projects";
 import OpenAI from "openai";
 
-const MAX_TURNS = 20;
+const MAX_TURNS_CHAT = 20;
+const MAX_TURNS_PROJECT = 40;
 const MAX_MESSAGE_LENGTH = 2000;
 const RATE_LIMIT = 30; // max kid messages per window
 const RATE_WINDOW_MS = 60_000; // 1 minute
@@ -65,11 +67,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Detect project from first message in the session
+    const firstKidTurn = session.turns.find((t) => t.role === "kid");
+    const project = firstKidTurn ? detectProject(firstKidTurn.content) : detectProject(message);
+    const maxTurns = project ? MAX_TURNS_PROJECT : MAX_TURNS_CHAT;
+
     // DB-based turn count (atomic — prevents race conditions on double-click)
     const kidTurnCount = await prisma.turn.count({
       where: { sessionId: session.id, role: "kid" },
     });
-    if (kidTurnCount >= MAX_TURNS) {
+    if (kidTurnCount >= maxTurns) {
       await prisma.session.update({
         where: { id: session.id },
         data: { endedAt: new Date() },
@@ -108,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     // Build conversation history for AI
     const totalTurnCount = kidTurnCount + 1;
-    const systemPrompt = buildSystemPrompt(effortLevel, totalTurnCount);
+    const systemPrompt = buildSystemPrompt(effortLevel, totalTurnCount, project);
 
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       { role: "system", content: systemPrompt },
@@ -130,7 +137,7 @@ export async function POST(request: NextRequest) {
       model: process.env.AI_MODEL || "gpt-4o-mini",
       messages,
       stream: true,
-      max_completion_tokens: 150,
+      max_completion_tokens: project ? 250 : 150,
       temperature: 0.7,
     });
 
@@ -163,7 +170,7 @@ export async function POST(request: NextRequest) {
 
           // Check if session should end after this turn
           const newKidTurnCount = kidTurnCount + 1;
-          if (newKidTurnCount >= MAX_TURNS) {
+          if (newKidTurnCount >= maxTurns) {
             await prisma.session.update({
               where: { id: session.id },
               data: { endedAt: new Date() },

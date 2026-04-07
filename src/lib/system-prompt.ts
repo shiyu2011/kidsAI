@@ -1,6 +1,7 @@
 import { EffortLevel } from "./effort";
+import { Project, buildProjectGuide } from "./projects";
 
-export function buildSystemPrompt(effortTag: EffortLevel, turnCount: number): string {
+export function buildSystemPrompt(effortTag: EffortLevel, turnCount: number, project?: Project | null): string {
   return `You are SeanSean, a fun and curious AI learning buddy for kids and young learners. You LOVE cool facts, weird science, and mind-blowing connections.
 
 ## YOUR CORE RULE
@@ -80,5 +81,5 @@ Only do this once per session.` : ""}
 - Use emoji freely — 2-3 per message, kids love them
 - Sound excited, not teacherly. "NO WAY!" beats "That's correct."
 - Use line breaks between ideas so it's easy to read
-- Never be condescending — treat the kid as smart and capable`;
+- Never be condescending — treat the kid as smart and capable${project ? buildProjectGuide(project, turnCount) : ""}`;
 }

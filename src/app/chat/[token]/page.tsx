@@ -2,95 +2,12 @@
 
 import { useState, useRef, useEffect, use } from "react";
 import { sendMessage } from "@/lib/api-client";
+import { PROJECTS } from "@/lib/projects";
 
 interface Message {
   role: "kid" | "ai";
   content: string;
 }
-
-const PROJECTS = [
-  {
-    id: "volcano",
-    title: "Build a Volcano",
-    description: "Design an erupting volcano and learn why they explode",
-    icon: "🌋",
-    category: "Science",
-    color: "from-red-500 to-orange-500",
-    prompt: "I want to do the volcano project! Help me design and understand how volcanoes work.",
-  },
-  {
-    id: "space-mission",
-    title: "Space Mission",
-    description: "Plan a mission to Mars and solve real space problems",
-    icon: "🚀",
-    category: "Science",
-    color: "from-indigo-500 to-purple-500",
-    prompt: "I want to plan a space mission to Mars! Help me figure out what we need.",
-  },
-  {
-    id: "mystery-novel",
-    title: "Mystery Story",
-    description: "Write a detective story with twists and clues",
-    icon: "🔍",
-    category: "Writing",
-    color: "from-amber-500 to-yellow-500",
-    prompt: "I want to write a mystery story! Let's create a detective adventure together.",
-  },
-  {
-    id: "game-designer",
-    title: "Design a Game",
-    description: "Invent your own video game with characters and levels",
-    icon: "🎮",
-    category: "Engineering",
-    color: "from-green-500 to-emerald-500",
-    prompt: "I want to design my own video game! Help me plan the characters, levels, and gameplay.",
-  },
-  {
-    id: "robot-inventor",
-    title: "Invent a Robot",
-    description: "Design a robot that solves a real-world problem",
-    icon: "🤖",
-    category: "Engineering",
-    color: "from-cyan-500 to-blue-500",
-    prompt: "I want to invent a robot! Help me figure out what it should do and how it works.",
-  },
-  {
-    id: "ocean-explorer",
-    title: "Ocean Explorer",
-    description: "Dive deep and discover creatures of the abyss",
-    icon: "🐙",
-    category: "Science",
-    color: "from-blue-500 to-teal-500",
-    prompt: "I want to explore the deep ocean! What weird creatures live down there?",
-  },
-  {
-    id: "comic-book",
-    title: "Create a Comic",
-    description: "Build a superhero and write their origin story",
-    icon: "💥",
-    category: "Writing",
-    color: "from-pink-500 to-rose-500",
-    prompt: "I want to create a comic book superhero! Help me build their story and powers.",
-  },
-  {
-    id: "bridge-builder",
-    title: "Bridge Builder",
-    description: "Engineer a bridge that can hold a truck",
-    icon: "🌉",
-    category: "Engineering",
-    color: "from-gray-500 to-slate-500",
-    prompt: "I want to design a bridge! Help me figure out how to make it super strong.",
-  },
-  {
-    id: "time-travel",
-    title: "Time Traveler",
-    description: "Visit any era in history and see what life was like",
-    icon: "⏰",
-    category: "Explore",
-    color: "from-violet-500 to-fuchsia-500",
-    prompt: "I want to time travel! Let's pick a time period and explore what life was like.",
-  },
-];
 
 function pickRandom<T>(arr: T[], n: number): T[] {
   const shuffled = [...arr].sort(() => Math.random() - 0.5);
