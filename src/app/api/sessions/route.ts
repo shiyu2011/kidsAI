@@ -23,8 +23,11 @@ export async function GET(request: NextRequest) {
     orderBy: { startedAt: "desc" },
   });
 
-  // Strip accessToken from response — parents don't need it in the dashboard
-  const sanitized = sessions.map(({ accessToken: _token, ...rest }) => rest);
+  // Include accessToken only for active sessions (so parent can resend link)
+  const sanitized = sessions.map(({ accessToken, ...rest }) => ({
+    ...rest,
+    accessToken: rest.endedAt ? undefined : accessToken,
+  }));
   return NextResponse.json(sanitized);
 }
 

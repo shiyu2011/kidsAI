@@ -131,6 +131,7 @@ export default function DashboardPage() {
   const [newChildName, setNewChildName] = useState("");
   const [showAddChild, setShowAddChild] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [copiedSessionId, setCopiedSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -182,6 +183,14 @@ export default function DashboardPage() {
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Something went wrong");
     }
+  }
+
+  function copySessionLink(session: Session) {
+    if (!session.accessToken) return;
+    const link = `${window.location.origin}/chat/${session.accessToken}`;
+    navigator.clipboard.writeText(link);
+    setCopiedSessionId(session.id);
+    setTimeout(() => setCopiedSessionId(null), 3000);
   }
 
   function handleLogout() {
@@ -479,23 +488,39 @@ export default function DashboardPage() {
                   {sessions.map((session) => {
                     const kidTurns = session.turns.filter((t) => t.role === "kid");
                     return (
-                      <button
+                      <div
                         key={session.id}
-                        onClick={() => setSelectedSession(session)}
-                        className="w-full bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-blue-300 hover:shadow-sm transition flex items-center justify-between"
+                        className="bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-sm transition flex items-center justify-between"
                       >
-                        <div>
+                        <button
+                          onClick={() => setSelectedSession(session)}
+                          className="flex-1 text-left"
+                        >
                           <span className="font-medium text-gray-900">{session.topic || "Untitled"}</span>
                           <div className="text-xs text-gray-500 mt-0.5">
                             {kidTurns.length} turns &middot; {new Date(session.startedAt).toLocaleDateString()}
                           </div>
+                        </button>
+                        <div className="flex items-center gap-2">
+                          {!session.endedAt && session.accessToken && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); copySessionLink(session); }}
+                              className={`text-xs px-3 py-1.5 rounded-full transition font-medium ${
+                                copiedSessionId === session.id
+                                  ? "bg-green-600 text-white"
+                                  : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                              }`}
+                            >
+                              {copiedSessionId === session.id ? "Copied!" : "Send Link"}
+                            </button>
+                          )}
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            session.endedAt ? "bg-gray-100 text-gray-500" : "bg-green-100 text-green-700"
+                          }`}>
+                            {session.endedAt ? "Completed" : "Active"}
+                          </span>
                         </div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          session.endedAt ? "bg-gray-100 text-gray-500" : "bg-green-100 text-green-700"
-                        }`}>
-                          {session.endedAt ? "Completed" : "Active"}
-                        </span>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
