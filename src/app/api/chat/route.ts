@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { classifyEffort, effortToScore } from "@/lib/effort";
 import { buildSystemPrompt } from "@/lib/system-prompt";
-import { detectProject, getCurrentPhase } from "@/lib/projects";
+import { detectProject } from "@/lib/projects";
 import OpenAI from "openai";
 
 const MAX_TURNS_CHAT = 20;
@@ -168,75 +168,63 @@ export async function POST(request: NextRequest) {
             },
           });
 
-          // Generate image at project phase transitions
+          // Generate image at fixed turn milestones for project sessions
           const newKidTurnCount = kidTurnCount + 1;
-          if (project) {
-            const prevPhaseInfo = kidTurnCount > 0 ? getCurrentPhase(project, kidTurnCount) : null;
-            const currPhaseInfo = getCurrentPhase(project, newKidTurnCount);
+          const IMAGE_TURNS = [5, 15, 30]; // early concept, mid-project, final
+          if (project && IMAGE_TURNS.includes(newKidTurnCount)) {
+            // Verify we haven't already generated too many images
+            const existingImages = await prisma.turn.count({
+              where: { sessionId: session.id, imageUrl: { not: null } },
+            });
 
-            // Only trigger image when phase actually changes, or at final turn
-            const phaseChanged = prevPhaseInfo !== null && prevPhaseInfo.index !== currPhaseInfo.index;
-            const isLastTurn = newKidTurnCount >= maxTurns;
+            if (existingImages < 3) {
+              try {
+                const allTurns = [...session.turns, { role: "kid", content: message }, { role: "ai", content: fullResponse }];
+                const recentTurns = allTurns
+                  .slice(-10)
+                  .map((t) => `${t.role === "kid" ? "Kid" : "AI"}: ${t.content}`)
+                  .join("\n");
 
-            if (phaseChanged || isLastTurn) {
-              // The phase that just completed is the one that might need an image
-              const completedPhase = prevPhaseInfo?.phase ?? currPhaseInfo.phase;
+                const imageStage = newKidTurnCount <= 5 ? "early concept sketch" : newKidTurnCount <= 15 ? "mid-project progress visualization" : "final completed project showcase";
 
-              if (completedPhase.generateImage && completedPhase.imagePromptHint) {
-                // Check we haven't already generated an image for this session recently
-                const existingImages = await prisma.turn.count({
-                  where: { sessionId: session.id, imageUrl: { not: null } },
+                const promptResponse = await openai.chat.completions.create({
+                  model: "gpt-4o-mini",
+                  messages: [
+                    {
+                      role: "system",
+                      content: `You generate DALL-E image prompts for a kids learning project. Write a single vivid image prompt (max 100 words) that captures what the kid has been building. This is the ${imageStage}. The image should be: colorful, fun, safe for children, no text or words in the image. Focus on the SPECIFIC details the kid described. Output ONLY the prompt.`,
+                    },
+                    {
+                      role: "user",
+                      content: `Project: ${project.title}\n\nRecent conversation:\n${recentTurns}`,
+                    },
+                  ],
+                  max_tokens: 150,
+                  temperature: 0.7,
                 });
-                const maxImages = 3;
 
-                if (existingImages < maxImages) {
-                  try {
-                    // Use GPT to generate an image prompt based on actual conversation
-                    const recentTurns = [...session.turns, { role: "kid", content: message }, { role: "ai", content: fullResponse }]
-                      .slice(-8)
-                      .map((t) => `${t.role === "kid" ? "Kid" : "AI"}: ${t.content}`)
-                      .join("\n");
+                const imagePrompt = promptResponse.choices[0]?.message?.content || `${project.title} project, colorful fun illustration for kids`;
 
-                    const promptResponse = await openai.chat.completions.create({
-                      model: "gpt-4o-mini",
-                      messages: [
-                        {
-                          role: "system",
-                          content: "You generate DALL-E image prompts. Given a conversation between a kid and AI about a project, write a single vivid image prompt (max 100 words) that captures what they've been building/discussing. The image should be: colorful, fun, safe for children, educational, no text or words in the image. Focus on the specific details the kid described (their robot, their volcano, their story characters, etc). Output ONLY the prompt, nothing else.",
-                        },
-                        {
-                          role: "user",
-                          content: `Project: ${project.title}\nPhase just completed: ${completedPhase.name} — ${completedPhase.goal}\n\nRecent conversation:\n${recentTurns}`,
-                        },
-                      ],
-                      max_tokens: 150,
-                      temperature: 0.7,
-                    });
+                const imageResponse = await openai.images.generate({
+                  model: "dall-e-3",
+                  prompt: imagePrompt,
+                  n: 1,
+                  size: "1024x1024",
+                  quality: "standard",
+                });
 
-                    const imagePrompt = promptResponse.choices[0]?.message?.content || completedPhase.imagePromptHint || "";
-
-                    const imageResponse = await openai.images.generate({
-                      model: "dall-e-3",
-                      prompt: imagePrompt,
-                      n: 1,
-                      size: "1024x1024",
-                      quality: "standard",
-                    });
-
-                    const imageUrl = imageResponse.data?.[0]?.url;
-                    if (imageUrl) {
-                      await prisma.turn.update({
-                        where: { id: aiTurn.id },
-                        data: { imageUrl },
-                      });
-                      controller.enqueue(
-                        encoder.encode(`data: ${JSON.stringify({ image: imageUrl })}\n\n`)
-                      );
-                    }
-                  } catch (imgErr) {
-                    console.error("Image generation failed:", imgErr);
-                  }
+                const imageUrl = imageResponse.data?.[0]?.url;
+                if (imageUrl) {
+                  await prisma.turn.update({
+                    where: { id: aiTurn.id },
+                    data: { imageUrl },
+                  });
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify({ image: imageUrl })}\n\n`)
+                  );
                 }
+              } catch (imgErr) {
+                console.error("Image generation failed:", imgErr);
               }
             }
           }
