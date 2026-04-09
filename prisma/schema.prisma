@@ -43,6 +43,7 @@ model Turn {
   role        String   // "kid" | "ai"
   content     String
   effortScore Int      @default(0) // 0=lazy, 1=trying, 2=thinking, 3=breakthrough
+  imageUrl    String?  // DALL-E generated image URL (for project phase transitions)
   createdAt   DateTime @default(now())
   session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }

@@ -7,6 +7,7 @@ import { PROJECTS } from "@/lib/projects";
 interface Message {
   role: "kid" | "ai";
   content: string;
+  image?: string;
 }
 
 function pickRandom<T>(arr: T[], n: number): T[] {
@@ -160,6 +161,16 @@ export default function ChatPage({ params }: { params: Promise<{ token: string }
         setSessionEnded(true);
         setSessionEndMessage(endMsg);
         setIsStreaming(false);
+      },
+      (imageUrl) => {
+        setMessages((prev) => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last.role === "ai") {
+            updated[updated.length - 1] = { ...last, image: imageUrl };
+          }
+          return updated;
+        });
       }
     );
   }
@@ -279,6 +290,17 @@ export default function ChatPage({ params }: { params: Promise<{ token: string }
                     <span className="inline-block w-1.5 h-4 bg-blue-500 animate-pulse ml-0.5 align-text-bottom" />
                   )}
                 </p>
+                {msg.image && (
+                  <div className="mt-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={msg.image}
+                      alt="SeanSean created this for you!"
+                      className="rounded-xl w-full max-w-sm border border-gray-100 shadow-sm"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">Created by SeanSean just for you!</p>
+                  </div>
+                )}
               </div>
             </div>
           ))}

@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       topic: true,
       endedAt: true,
       turns: {
-        select: { role: true, content: true },
+        select: { role: true, content: true, imageUrl: true },
         orderBy: { createdAt: "asc" },
       },
     },
@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
       messages: session.turns.map((t) => ({
         role: t.role === "kid" ? "kid" : "ai",
         content: t.content,
+        ...(t.imageUrl ? { image: t.imageUrl } : {}),
       })),
     }),
     { headers: { "Content-Type": "application/json" } }

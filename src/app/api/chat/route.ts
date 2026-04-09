@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { classifyEffort, effortToScore } from "@/lib/effort";
 import { buildSystemPrompt } from "@/lib/system-prompt";
-import { detectProject } from "@/lib/projects";
+import { detectProject, getCurrentPhase } from "@/lib/projects";
 import OpenAI from "openai";
 
 const MAX_TURNS_CHAT = 20;
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Save AI response
-          await prisma.turn.create({
+          const aiTurn = await prisma.turn.create({
             data: {
               sessionId: session.id,
               role: "ai",
@@ -168,8 +168,52 @@ export async function POST(request: NextRequest) {
             },
           });
 
-          // Check if session should end after this turn
+          // Generate image at project phase transitions
           const newKidTurnCount = kidTurnCount + 1;
+          if (project) {
+            const prevPhaseInfo = getCurrentPhase(project, kidTurnCount || 1);
+            const currPhaseInfo = getCurrentPhase(project, newKidTurnCount);
+            const phaseJustEnded = prevPhaseInfo.index !== currPhaseInfo.index || newKidTurnCount >= maxTurns;
+            const phaseToCheck = phaseJustEnded ? prevPhaseInfo : currPhaseInfo;
+            const nearEnd = phaseToCheck.turnsInPhase >= parseInt(phaseToCheck.phase.turns.split("-")[1]) - 1;
+
+            if ((phaseJustEnded || nearEnd) && phaseToCheck.phase.generateImage && phaseToCheck.phase.imagePromptHint) {
+              try {
+                // Build a context-aware prompt from conversation
+                const kidMessages = session.turns
+                  .filter((t) => t.role === "kid")
+                  .map((t) => t.content)
+                  .slice(-3)
+                  .join(". ");
+                const imagePrompt = `${phaseToCheck.phase.imagePromptHint}. Based on the kid's ideas: ${kidMessages.slice(0, 200)}. Style: colorful, fun, safe for children, no text or words in the image.`;
+
+                const imageResponse = await openai.images.generate({
+                  model: "dall-e-3",
+                  prompt: imagePrompt,
+                  n: 1,
+                  size: "1024x1024",
+                  quality: "standard",
+                });
+
+                const imageUrl = imageResponse.data?.[0]?.url;
+                if (imageUrl) {
+                  // Save image URL to the AI turn for persistence
+                  await prisma.turn.update({
+                    where: { id: aiTurn.id },
+                    data: { imageUrl },
+                  });
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify({ image: imageUrl })}\n\n`)
+                  );
+                }
+              } catch (imgErr) {
+                console.error("Image generation failed:", imgErr);
+                // Non-fatal — just skip the image
+              }
+            }
+          }
+
+          // Check if session should end after this turn
           if (newKidTurnCount >= maxTurns) {
             await prisma.session.update({
               where: { id: session.id },

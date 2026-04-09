@@ -2,6 +2,8 @@ export interface ProjectPhase {
   name: string;
   turns: string; // e.g. "2-3"
   goal: string;
+  generateImage?: boolean; // trigger image at end of this phase
+  imagePromptHint?: string; // hint for DALL-E prompt generation
 }
 
 export interface Project {
@@ -27,11 +29,11 @@ export const PROJECTS: Project[] = [
     prompt: "I want to do the volcano project! Help me design and understand how volcanoes work.",
     keywords: ["volcano"],
     phases: [
-      { name: "The Big Boom", turns: "2-3", goal: "What makes volcanoes erupt? Explore pressure, magma, and tectonic plates" },
+      { name: "The Big Boom", turns: "2-3", goal: "What makes volcanoes erupt? Explore pressure, magma, and tectonic plates", generateImage: true, imagePromptHint: "a cutaway diagram of a volcano showing magma chamber and tectonic plates, colorful educational illustration for kids" },
       { name: "Design Your Volcano", turns: "3-4", goal: "Pick a type (shield, stratovolcano, cinder cone), design the shape and size" },
-      { name: "Inside the Volcano", turns: "3-4", goal: "What's happening underground? Magma chambers, lava tubes, gas buildup" },
+      { name: "Inside the Volcano", turns: "3-4", goal: "What's happening underground? Magma chambers, lava tubes, gas buildup", generateImage: true, imagePromptHint: "cross-section of a volcano interior showing glowing magma tubes and gas chambers, vibrant kids illustration" },
       { name: "The Eruption", turns: "2-3", goal: "Simulate the eruption — what comes out, how far does it go, what happens to the land?" },
-      { name: "Your Volcano Report", turns: "1-2", goal: "Wrap up: summarize what you learned and present your volcano design" },
+      { name: "Your Volcano Report", turns: "1-2", goal: "Wrap up: summarize what you learned and present your volcano design", generateImage: true, imagePromptHint: "a dramatic erupting volcano with lava flows and ash clouds, the kid's final volcano design, epic colorful illustration" },
     ],
   },
   {
@@ -44,11 +46,11 @@ export const PROJECTS: Project[] = [
     prompt: "I want to plan a space mission to Mars! Help me figure out what we need.",
     keywords: ["space", "mars", "mission"],
     phases: [
-      { name: "Mission Goal", turns: "2-3", goal: "What's the mission? Explore Mars, build a base, find water?" },
+      { name: "Mission Goal", turns: "2-3", goal: "What's the mission? Explore Mars, build a base, find water?", generateImage: true, imagePromptHint: "a Mars landscape with a small astronaut looking at the red planet horizon, concept art, kid-friendly illustration" },
       { name: "Build the Ship", turns: "3-4", goal: "Design the spacecraft — fuel, engines, living quarters, supplies" },
-      { name: "Survive the Journey", turns: "3-4", goal: "6 months in space — food, exercise, radiation, boredom" },
+      { name: "Survive the Journey", turns: "3-4", goal: "6 months in space — food, exercise, radiation, boredom", generateImage: true, imagePromptHint: "interior of a spacecraft with astronaut living quarters, floating food and exercise equipment, fun kids illustration" },
       { name: "Land on Mars", turns: "3-4", goal: "Landing strategy, first steps, setting up base" },
-      { name: "Mission Debrief", turns: "1-2", goal: "Present your mission plan — would NASA approve it?" },
+      { name: "Mission Debrief", turns: "1-2", goal: "Present your mission plan — would NASA approve it?", generateImage: true, imagePromptHint: "a completed Mars base with dome habitats, solar panels, and a rocket, epic kid-friendly space illustration" },
     ],
   },
   {
@@ -61,11 +63,11 @@ export const PROJECTS: Project[] = [
     prompt: "I want to write a mystery story! Let's create a detective adventure together.",
     keywords: ["mystery", "detective", "story", "novel"],
     phases: [
-      { name: "The Crime", turns: "2-3", goal: "What happened? Set the scene — what was stolen/who disappeared?" },
+      { name: "The Crime", turns: "2-3", goal: "What happened? Set the scene — what was stolen/who disappeared?", generateImage: true, imagePromptHint: "a mysterious crime scene with clues scattered around, dark atmospheric detective illustration for kids" },
       { name: "The Detective", turns: "2-3", goal: "Create your main character — what makes them special at solving mysteries?" },
-      { name: "Clues & Suspects", turns: "3-4", goal: "Plant 3 clues and 2-3 suspects — red herrings included!" },
+      { name: "Clues & Suspects", turns: "3-4", goal: "Plant 3 clues and 2-3 suspects — red herrings included!", generateImage: true, imagePromptHint: "a detective's evidence board with photos, string connections, and clue notes, colorful mystery illustration" },
       { name: "The Chase", turns: "3-4", goal: "Write the investigation — following leads, interviewing suspects, close calls" },
-      { name: "The Big Reveal", turns: "2-3", goal: "Solve it! Write the twist ending where the detective cracks the case" },
+      { name: "The Big Reveal", turns: "2-3", goal: "Solve it! Write the twist ending where the detective cracks the case", generateImage: true, imagePromptHint: "a detective triumphantly solving the case, dramatic reveal moment, kid-friendly mystery book cover style" },
     ],
   },
   {
@@ -78,11 +80,11 @@ export const PROJECTS: Project[] = [
     prompt: "I want to design my own video game! Help me plan the characters, levels, and gameplay.",
     keywords: ["game", "video game"],
     phases: [
-      { name: "Game Concept", turns: "2-3", goal: "What kind of game? Platformer, RPG, puzzle? What's the goal?" },
+      { name: "Game Concept", turns: "2-3", goal: "What kind of game? Platformer, RPG, puzzle? What's the goal?", generateImage: true, imagePromptHint: "a video game title screen with colorful pixel art style, fun and exciting game concept art for kids" },
       { name: "Hero & Villain", turns: "3-4", goal: "Design the main character and the enemy — abilities, backstory, look" },
-      { name: "World Building", turns: "3-4", goal: "Create 3 levels/worlds — themes, obstacles, secrets" },
+      { name: "World Building", turns: "3-4", goal: "Create 3 levels/worlds — themes, obstacles, secrets", generateImage: true, imagePromptHint: "a vibrant video game world map showing different themed levels, colorful game design illustration" },
       { name: "Power-ups & Mechanics", turns: "3-4", goal: "What special moves, items, and rules make your game fun?" },
-      { name: "Game Pitch", turns: "1-2", goal: "Pitch your game like you're presenting to a game company!" },
+      { name: "Game Pitch", turns: "1-2", goal: "Pitch your game like you're presenting to a game company!", generateImage: true, imagePromptHint: "a polished video game box art cover with the hero character in action pose, professional game art style for kids" },
     ],
   },
   {
@@ -95,11 +97,11 @@ export const PROJECTS: Project[] = [
     prompt: "I want to invent a robot! Help me figure out what it should do and how it works.",
     keywords: ["robot", "invent"],
     phases: [
-      { name: "The Problem", turns: "2-3", goal: "What real problem does your robot solve? Who needs it?" },
+      { name: "The Problem", turns: "2-3", goal: "What real problem does your robot solve? Who needs it?", generateImage: true, imagePromptHint: "a friendly robot concept sketch on a blueprint background, clean and fun engineering illustration for kids" },
       { name: "Robot Design", turns: "3-4", goal: "Shape, size, how it moves — wheels, legs, flying? What does it look like?" },
-      { name: "Robot Brain", turns: "3-4", goal: "Sensors, cameras, AI — how does it see, think, and decide?" },
+      { name: "Robot Brain", turns: "3-4", goal: "Sensors, cameras, AI — how does it see, think, and decide?", generateImage: true, imagePromptHint: "a detailed robot with visible sensors, cameras, and glowing brain circuits, fun technical illustration for kids" },
       { name: "Build & Test", turns: "3-4", goal: "What could go wrong? How do you test it? Fix the bugs!" },
-      { name: "Robot Launch", turns: "1-2", goal: "Name your robot and present it to the world — what makes it special?" },
+      { name: "Robot Launch", turns: "1-2", goal: "Name your robot and present it to the world — what makes it special?", generateImage: true, imagePromptHint: "a polished robot on a stage being revealed to a cheering crowd, epic product launch illustration for kids" },
     ],
   },
   {
@@ -112,11 +114,11 @@ export const PROJECTS: Project[] = [
     prompt: "I want to explore the deep ocean! What weird creatures live down there?",
     keywords: ["ocean", "deep sea", "underwater"],
     phases: [
-      { name: "Surface Zone", turns: "2-3", goal: "What lives near the top? Sunlight zone creatures and coral reefs" },
+      { name: "Surface Zone", turns: "2-3", goal: "What lives near the top? Sunlight zone creatures and coral reefs", generateImage: true, imagePromptHint: "a colorful coral reef teeming with tropical fish and sea turtles, bright underwater illustration for kids" },
       { name: "Going Deeper", turns: "3-4", goal: "Twilight zone — less light, weird adaptations, bioluminescence" },
-      { name: "The Abyss", turns: "3-4", goal: "Deep sea monsters! Anglerfish, giant squid, tube worms at vents" },
+      { name: "The Abyss", turns: "3-4", goal: "Deep sea monsters! Anglerfish, giant squid, tube worms at vents", generateImage: true, imagePromptHint: "deep sea creatures in the dark ocean — glowing anglerfish, giant squid, hydrothermal vents, mysterious underwater illustration" },
       { name: "Your Submarine", turns: "3-4", goal: "Design a sub that can survive the pressure — how deep can you go?" },
-      { name: "Discovery Report", turns: "1-2", goal: "What's your biggest discovery? Present your expedition findings" },
+      { name: "Discovery Report", turns: "1-2", goal: "What's your biggest discovery? Present your expedition findings", generateImage: true, imagePromptHint: "a futuristic submarine exploring the deepest ocean with spotlights revealing amazing creatures, epic underwater illustration" },
     ],
   },
   {
@@ -129,11 +131,11 @@ export const PROJECTS: Project[] = [
     prompt: "I want to create a comic book superhero! Help me build their story and powers.",
     keywords: ["comic", "superhero"],
     phases: [
-      { name: "Origin Story", turns: "2-3", goal: "Who is your hero? How did they get their powers?" },
+      { name: "Origin Story", turns: "2-3", goal: "Who is your hero? How did they get their powers?", generateImage: true, imagePromptHint: "a superhero origin moment — dramatic transformation scene with energy and light, comic book style illustration for kids" },
       { name: "Powers & Weakness", turns: "3-4", goal: "What can they do? Every hero needs a weakness too!" },
-      { name: "The Villain", turns: "3-4", goal: "Create the nemesis — what makes them dangerous and interesting?" },
+      { name: "The Villain", turns: "3-4", goal: "Create the nemesis — what makes them dangerous and interesting?", generateImage: true, imagePromptHint: "a dramatic face-off between a superhero and villain, comic book panel style with bold colors" },
       { name: "The Showdown", turns: "3-4", goal: "Write the big battle scene — how does the hero win?" },
-      { name: "Issue #1 Cover", turns: "1-2", goal: "Describe your comic cover and write the back-cover summary" },
+      { name: "Issue #1 Cover", turns: "1-2", goal: "Describe your comic cover and write the back-cover summary", generateImage: true, imagePromptHint: "a professional comic book cover with the superhero in action pose, bold title and dramatic composition for kids" },
     ],
   },
   {
@@ -146,11 +148,11 @@ export const PROJECTS: Project[] = [
     prompt: "I want to design a bridge! Help me figure out how to make it super strong.",
     keywords: ["bridge"],
     phases: [
-      { name: "The Challenge", turns: "2-3", goal: "Where is your bridge? How long, what crosses it?" },
+      { name: "The Challenge", turns: "2-3", goal: "Where is your bridge? How long, what crosses it?", generateImage: true, imagePromptHint: "a scenic landscape with a river gap where a bridge needs to be built, architectural concept sketch for kids" },
       { name: "Bridge Types", turns: "3-4", goal: "Beam, arch, suspension, cable-stayed — which design and why?" },
-      { name: "Materials & Forces", turns: "3-4", goal: "Tension, compression, load — what materials handle what forces?" },
+      { name: "Materials & Forces", turns: "3-4", goal: "Tension, compression, load — what materials handle what forces?", generateImage: true, imagePromptHint: "a bridge blueprint showing force arrows for tension and compression, colorful engineering diagram for kids" },
       { name: "Stress Test", turns: "3-4", goal: "What breaks it? Wind, earthquakes, heavy trucks — make it survive!" },
-      { name: "Grand Opening", turns: "1-2", goal: "Name your bridge and present the final design specs" },
+      { name: "Grand Opening", turns: "1-2", goal: "Name your bridge and present the final design specs", generateImage: true, imagePromptHint: "a magnificent completed bridge with ribbon cutting ceremony, cars crossing, epic architectural illustration for kids" },
     ],
   },
   {
@@ -163,11 +165,11 @@ export const PROJECTS: Project[] = [
     prompt: "I want to time travel! Let's pick a time period and explore what life was like.",
     keywords: ["time travel", "history"],
     phases: [
-      { name: "Pick Your Era", turns: "2-3", goal: "When do you want to go? Dinosaurs, Ancient Egypt, Medieval, Future?" },
+      { name: "Pick Your Era", turns: "2-3", goal: "When do you want to go? Dinosaurs, Ancient Egypt, Medieval, Future?", generateImage: true, imagePromptHint: "a magical time portal with swirling colors showing different historical eras, fantasy illustration for kids" },
       { name: "Arrival Day", turns: "3-4", goal: "You just arrived — what do you see, hear, smell? Who do you meet?" },
-      { name: "Daily Life", turns: "3-4", goal: "What do people eat, wear, do for fun? How different is it?" },
+      { name: "Daily Life", turns: "3-4", goal: "What do people eat, wear, do for fun? How different is it?", generateImage: true, imagePromptHint: "a bustling scene from a historical era with people in period clothing, markets and buildings, vivid illustration for kids" },
       { name: "Big Event", turns: "3-4", goal: "Witness a major historical event — what happens and how does it change things?" },
-      { name: "Time Traveler's Journal", turns: "1-2", goal: "Write your journal entry — what surprised you most? Would you stay?" },
+      { name: "Time Traveler's Journal", turns: "1-2", goal: "Write your journal entry — what surprised you most? Would you stay?", generateImage: true, imagePromptHint: "an open journal with sketches and notes from a time travel adventure, with a time machine in the background, whimsical illustration" },
     ],
   },
 ];
@@ -178,7 +180,6 @@ export function detectProject(firstMessage: string): Project | null {
     if (project.keywords.some((kw) => lower.includes(kw))) {
       return project;
     }
-    // Also match if message contains the project prompt prefix
     if (lower.includes(`${project.id} project`)) {
       return project;
     }
@@ -186,7 +187,7 @@ export function detectProject(firstMessage: string): Project | null {
   return null;
 }
 
-export function buildProjectGuide(project: Project, turnCount: number): string {
+export function getCurrentPhase(project: Project, turnCount: number): { phase: ProjectPhase; index: number; turnsInPhase: number } {
   let currentPhase = 0;
   let turnsUsed = 0;
 
@@ -200,8 +201,15 @@ export function buildProjectGuide(project: Project, turnCount: number): string {
     if (i === project.phases.length - 1) currentPhase = i;
   }
 
-  const phase = project.phases[currentPhase];
-  const turnsInPhase = turnCount - turnsUsed;
+  return {
+    phase: project.phases[currentPhase],
+    index: currentPhase,
+    turnsInPhase: turnCount - turnsUsed,
+  };
+}
+
+export function buildProjectGuide(project: Project, turnCount: number): string {
+  const { phase, index: currentPhase, turnsInPhase } = getCurrentPhase(project, turnCount);
   const maxPhraseTurns = parseInt(phase.turns.split("-")[1]);
   const nearPhaseEnd = turnsInPhase >= maxPhraseTurns - 1;
 

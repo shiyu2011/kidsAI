@@ -88,7 +88,8 @@ export async function sendMessage(
   onChunk: (content: string) => void,
   onDone: () => void,
   onError: (error: string) => void,
-  onSessionEnd?: (message: string) => void
+  onSessionEnd?: (message: string) => void,
+  onImage?: (imageUrl: string) => void
 ) {
   const res = await fetch("/api/chat", {
     method: "POST",
@@ -138,6 +139,9 @@ export async function sendMessage(
           }
           if (parsed.sessionEnded) {
             onSessionEnd?.(parsed.message);
+          }
+          if (parsed.image) {
+            onImage?.(parsed.image);
           }
           if (parsed.content) {
             onChunk(parsed.content);
