@@ -54,6 +54,23 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
+    id: "artemis-moon",
+    title: "Artemis Moon Mission",
+    description: "Join Artemis II and explore the far side of the Moon",
+    icon: "🌙",
+    category: "Science",
+    color: "from-gray-700 to-blue-900",
+    prompt: "I want to join the Artemis II mission and explore the far side of the Moon! Help me plan the journey.",
+    keywords: ["artemis", "moon", "lunar"],
+    phases: [
+      { name: "Mission Briefing", turns: "2-3", goal: "What is Artemis II? Why go back to the Moon? What makes the far side special?", generateImage: true, imagePromptHint: "the Moon seen from space with the far side visible, Orion spacecraft approaching, NASA-style illustration for kids" },
+      { name: "Meet the Crew", turns: "3-4", goal: "Who are the astronauts? What does each crew member do? What would YOUR job be?" },
+      { name: "Launch & Fly Around the Moon", turns: "3-4", goal: "Ride the SLS rocket, enter lunar orbit, see Earth shrink — what do you see from the far side?", generateImage: true, imagePromptHint: "view from Orion spacecraft window showing the cratered far side of the Moon with Earth in the distance, dramatic space illustration" },
+      { name: "Far Side Discoveries", turns: "3-4", goal: "Ancient craters, no radio signals, hidden ice — what would you explore if you could land?" },
+      { name: "Mission Report", turns: "1-2", goal: "Splashdown! Present what you learned — should we build a base on the far side?", generateImage: true, imagePromptHint: "Orion capsule splashing down in the ocean with parachutes, astronauts celebrating, epic NASA-style illustration for kids" },
+    ],
+  },
+  {
     id: "mystery-novel",
     title: "Mystery Story",
     description: "Write a detective story with twists and clues",
