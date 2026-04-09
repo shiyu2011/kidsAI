@@ -191,8 +191,29 @@ export async function POST(request: NextRequest) {
 
                 if (existingImages < maxImages) {
                   try {
-                    const kidMessages = [...session.turns.filter((t) => t.role === "kid").map((t) => t.content), message].slice(-4).join(". ");
-                    const imagePrompt = `${completedPhase.imagePromptHint}. Based on the kid's ideas: ${kidMessages.slice(0, 300)}. Style: colorful, fun, safe for children, no text or words in the image.`;
+                    // Use GPT to generate an image prompt based on actual conversation
+                    const recentTurns = [...session.turns, { role: "kid", content: message }, { role: "ai", content: fullResponse }]
+                      .slice(-8)
+                      .map((t) => `${t.role === "kid" ? "Kid" : "AI"}: ${t.content}`)
+                      .join("\n");
+
+                    const promptResponse = await openai.chat.completions.create({
+                      model: "gpt-4o-mini",
+                      messages: [
+                        {
+                          role: "system",
+                          content: "You generate DALL-E image prompts. Given a conversation between a kid and AI about a project, write a single vivid image prompt (max 100 words) that captures what they've been building/discussing. The image should be: colorful, fun, safe for children, educational, no text or words in the image. Focus on the specific details the kid described (their robot, their volcano, their story characters, etc). Output ONLY the prompt, nothing else.",
+                        },
+                        {
+                          role: "user",
+                          content: `Project: ${project.title}\nPhase just completed: ${completedPhase.name} — ${completedPhase.goal}\n\nRecent conversation:\n${recentTurns}`,
+                        },
+                      ],
+                      max_tokens: 150,
+                      temperature: 0.7,
+                    });
+
+                    const imagePrompt = promptResponse.choices[0]?.message?.content || completedPhase.imagePromptHint || "";
 
                     const imageResponse = await openai.images.generate({
                       model: "dall-e-3",
