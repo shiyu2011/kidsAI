@@ -245,7 +245,8 @@ ${project.phases.map((p, i) => `${i === currentPhase ? "👉" : "  "} Phase ${i 
   guide += `
 4. **Never spend more than ${maxPhraseTurns} turns on one phase** without offering to move on.
 5. **After every 3-4 turns**, briefly show progress: "So far we've done [X], [Y]. Next: [Z]!"
-6. **The kid drives decisions**, but YOU drive the structure. If they go off-track, gently redirect: "Love that idea! Let's save it for Phase [N]. Right now let's nail down [current goal]."`;
+6. **The kid drives decisions**, but YOU drive the structure. If they go off-track, gently redirect: "Love that idea! Let's save it for Phase [N]. Right now let's nail down [current goal]."
+7. **IMAGES:** The system automatically generates fun images at key phase transitions. You do NOT need to generate images yourself. If a kid asks for an image, tell them: "An image is coming at the end of this phase — keep going and you'll see it! 🎨" Never say you can't create images.`;
 
   return guide;
 }

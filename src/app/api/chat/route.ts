@@ -171,44 +171,51 @@ export async function POST(request: NextRequest) {
           // Generate image at project phase transitions
           const newKidTurnCount = kidTurnCount + 1;
           if (project) {
-            const prevPhaseInfo = getCurrentPhase(project, kidTurnCount || 1);
+            const prevPhaseInfo = kidTurnCount > 0 ? getCurrentPhase(project, kidTurnCount) : null;
             const currPhaseInfo = getCurrentPhase(project, newKidTurnCount);
-            const phaseJustEnded = prevPhaseInfo.index !== currPhaseInfo.index || newKidTurnCount >= maxTurns;
-            const phaseToCheck = phaseJustEnded ? prevPhaseInfo : currPhaseInfo;
-            const nearEnd = phaseToCheck.turnsInPhase >= parseInt(phaseToCheck.phase.turns.split("-")[1]) - 1;
 
-            if ((phaseJustEnded || nearEnd) && phaseToCheck.phase.generateImage && phaseToCheck.phase.imagePromptHint) {
-              try {
-                // Build a context-aware prompt from conversation
-                const kidMessages = session.turns
-                  .filter((t) => t.role === "kid")
-                  .map((t) => t.content)
-                  .slice(-3)
-                  .join(". ");
-                const imagePrompt = `${phaseToCheck.phase.imagePromptHint}. Based on the kid's ideas: ${kidMessages.slice(0, 200)}. Style: colorful, fun, safe for children, no text or words in the image.`;
+            // Only trigger image when phase actually changes, or at final turn
+            const phaseChanged = prevPhaseInfo !== null && prevPhaseInfo.index !== currPhaseInfo.index;
+            const isLastTurn = newKidTurnCount >= maxTurns;
 
-                const imageResponse = await openai.images.generate({
-                  model: "dall-e-3",
-                  prompt: imagePrompt,
-                  n: 1,
-                  size: "1024x1024",
-                  quality: "standard",
+            if (phaseChanged || isLastTurn) {
+              // The phase that just completed is the one that might need an image
+              const completedPhase = prevPhaseInfo?.phase ?? currPhaseInfo.phase;
+
+              if (completedPhase.generateImage && completedPhase.imagePromptHint) {
+                // Check we haven't already generated an image for this session recently
+                const existingImages = await prisma.turn.count({
+                  where: { sessionId: session.id, imageUrl: { not: null } },
                 });
+                const maxImages = 3;
 
-                const imageUrl = imageResponse.data?.[0]?.url;
-                if (imageUrl) {
-                  // Save image URL to the AI turn for persistence
-                  await prisma.turn.update({
-                    where: { id: aiTurn.id },
-                    data: { imageUrl },
-                  });
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ image: imageUrl })}\n\n`)
-                  );
+                if (existingImages < maxImages) {
+                  try {
+                    const kidMessages = [...session.turns.filter((t) => t.role === "kid").map((t) => t.content), message].slice(-4).join(". ");
+                    const imagePrompt = `${completedPhase.imagePromptHint}. Based on the kid's ideas: ${kidMessages.slice(0, 300)}. Style: colorful, fun, safe for children, no text or words in the image.`;
+
+                    const imageResponse = await openai.images.generate({
+                      model: "dall-e-3",
+                      prompt: imagePrompt,
+                      n: 1,
+                      size: "1024x1024",
+                      quality: "standard",
+                    });
+
+                    const imageUrl = imageResponse.data?.[0]?.url;
+                    if (imageUrl) {
+                      await prisma.turn.update({
+                        where: { id: aiTurn.id },
+                        data: { imageUrl },
+                      });
+                      controller.enqueue(
+                        encoder.encode(`data: ${JSON.stringify({ image: imageUrl })}\n\n`)
+                      );
+                    }
+                  } catch (imgErr) {
+                    console.error("Image generation failed:", imgErr);
+                  }
                 }
-              } catch (imgErr) {
-                console.error("Image generation failed:", imgErr);
-                // Non-fatal — just skip the image
               }
             }
           }
