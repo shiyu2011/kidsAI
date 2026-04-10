@@ -178,8 +178,15 @@ export default function DashboardPage() {
     setErrorMessage(null);
     try {
       const { accessToken } = await createSession(childId);
-      window.open(`/chat/${accessToken}`, "_blank");
-      loadData();
+      const url = `/chat/${accessToken}`;
+      // window.open is blocked on mobile after async calls — use direct navigation
+      const newTab = window.open(url, "_blank");
+      if (!newTab) {
+        // Popup blocked (common on mobile) — navigate directly
+        window.location.href = url;
+      } else {
+        loadData();
+      }
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Something went wrong");
     }
