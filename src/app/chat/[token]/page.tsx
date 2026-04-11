@@ -8,6 +8,8 @@ interface Message {
   role: "kid" | "ai";
   content: string;
   image?: string;
+  imageLoading?: boolean;
+  bonusMessage?: string;
 }
 
 function pickRandom<T>(arr: T[], n: number): T[] {
@@ -162,12 +164,29 @@ export default function ChatPage({ params }: { params: Promise<{ token: string }
         setSessionEndMessage(endMsg);
         setIsStreaming(false);
       },
-      (imageUrl) => {
+      (imageUrl, isBonus, bonusMsg) => {
+        if (!imageUrl) {
+          // Image generation started — show loading
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last.role === "ai") {
+              updated[updated.length - 1] = { ...last, imageLoading: true };
+            }
+            return updated;
+          });
+          return;
+        }
         setMessages((prev) => {
           const updated = [...prev];
           const last = updated[updated.length - 1];
           if (last.role === "ai") {
-            updated[updated.length - 1] = { ...last, image: imageUrl };
+            updated[updated.length - 1] = {
+              ...last,
+              image: imageUrl,
+              imageLoading: false,
+              bonusMessage: isBonus ? (bonusMsg || "Your thinking earned a bonus picture!") : undefined,
+            };
           }
           return updated;
         });
@@ -290,8 +309,26 @@ export default function ChatPage({ params }: { params: Promise<{ token: string }
                     <span className="inline-block w-1.5 h-4 bg-blue-500 animate-pulse ml-0.5 align-text-bottom" />
                   )}
                 </p>
+                {msg.imageLoading && !msg.image && (
+                  <div className="mt-3 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4 max-w-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center animate-bounce">
+                        🎨
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-purple-700">Creating your picture...</p>
+                        <p className="text-xs text-purple-500">SeanSean is painting what you described!</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {msg.image && (
                   <div className="mt-3">
+                    {msg.bonusMessage && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2 max-w-sm">
+                        <p className="text-xs font-medium text-amber-700">⭐ {msg.bonusMessage}</p>
+                      </div>
+                    )}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={msg.image}

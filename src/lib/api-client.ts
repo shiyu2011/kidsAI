@@ -82,6 +82,26 @@ export async function createSession(childId: string) {
   });
 }
 
+async function generateProjectImage(
+  accessToken: string,
+  onImage?: (imageUrl: string, isBonus?: boolean, message?: string) => void
+) {
+  try {
+    const res = await fetch("/api/chat/image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessToken }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.image) {
+      onImage?.(data.image, data.isBonus, data.message);
+    }
+  } catch {
+    // Non-fatal — just skip the image
+  }
+}
+
 export async function sendMessage(
   message: string,
   accessToken: string,
@@ -89,7 +109,7 @@ export async function sendMessage(
   onDone: () => void,
   onError: (error: string) => void,
   onSessionEnd?: (message: string) => void,
-  onImage?: (imageUrl: string) => void
+  onImage?: (imageUrl: string, isBonus?: boolean, message?: string) => void
 ) {
   const res = await fetch("/api/chat", {
     method: "POST",
@@ -142,6 +162,11 @@ export async function sendMessage(
           }
           if (parsed.image) {
             onImage?.(parsed.image);
+          }
+          if (parsed.generateImage) {
+            // Show loading state, then trigger separate image generation
+            onImage?.("", false, undefined); // empty URL = loading signal
+            generateProjectImage(accessToken, onImage);
           }
           if (parsed.content) {
             onChunk(parsed.content);

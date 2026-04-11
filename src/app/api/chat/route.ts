@@ -168,64 +168,22 @@ export async function POST(request: NextRequest) {
             },
           });
 
-          // Generate image at fixed turn milestones for project sessions
+          // Signal client to check for image generation (separate API call avoids timeout)
           const newKidTurnCount = kidTurnCount + 1;
-          const IMAGE_TURNS = [5, 15, 30]; // early concept, mid-project, final
-          if (project && IMAGE_TURNS.includes(newKidTurnCount)) {
-            // Verify we haven't already generated too many images
+          if (project) {
+            const IMAGE_MILESTONES = [5, 12, 20];
+            const isMilestone = IMAGE_MILESTONES.includes(newKidTurnCount);
+            const breakthroughCount = session.turns.filter((t) => t.role === "kid" && t.effortScore >= 3).length + (effortScore >= 3 ? 1 : 0);
             const existingImages = await prisma.turn.count({
               where: { sessionId: session.id, imageUrl: { not: null } },
             });
+            const bonusEarned = Math.floor(breakthroughCount / 3);
+            const bonusDue = bonusEarned - Math.max(0, existingImages - 3);
 
-            if (existingImages < 3) {
-              try {
-                const allTurns = [...session.turns, { role: "kid", content: message }, { role: "ai", content: fullResponse }];
-                const recentTurns = allTurns
-                  .slice(-10)
-                  .map((t) => `${t.role === "kid" ? "Kid" : "AI"}: ${t.content}`)
-                  .join("\n");
-
-                const imageStage = newKidTurnCount <= 5 ? "early concept sketch" : newKidTurnCount <= 15 ? "mid-project progress visualization" : "final completed project showcase";
-
-                const promptResponse = await openai.chat.completions.create({
-                  model: "gpt-4o-mini",
-                  messages: [
-                    {
-                      role: "system",
-                      content: `You generate DALL-E image prompts for a kids learning project. Write a single vivid image prompt (max 100 words) that captures what the kid has been building. This is the ${imageStage}. The image should be: colorful, fun, safe for children, no text or words in the image. Focus on the SPECIFIC details the kid described. Output ONLY the prompt.`,
-                    },
-                    {
-                      role: "user",
-                      content: `Project: ${project.title}\n\nRecent conversation:\n${recentTurns}`,
-                    },
-                  ],
-                  max_tokens: 150,
-                  temperature: 0.7,
-                });
-
-                const imagePrompt = promptResponse.choices[0]?.message?.content || `${project.title} project, colorful fun illustration for kids`;
-
-                const imageResponse = await openai.images.generate({
-                  model: "dall-e-3",
-                  prompt: imagePrompt,
-                  n: 1,
-                  size: "1024x1024",
-                  quality: "standard",
-                });
-
-                const imageUrl = imageResponse.data?.[0]?.url;
-                if (imageUrl) {
-                  await prisma.turn.update({
-                    where: { id: aiTurn.id },
-                    data: { imageUrl },
-                  });
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ image: imageUrl })}\n\n`)
-                  );
-                }
-              } catch (imgErr) {
-                console.error("Image generation failed:", imgErr);
-              }
+            if (isMilestone || (bonusDue > 0 && existingImages >= 3 && existingImages < 5)) {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ generateImage: true })}\n\n`)
+              );
             }
           }
 
