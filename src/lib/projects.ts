@@ -71,6 +71,23 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
+    id: "immune-system",
+    title: "Immune System Adventure",
+    description: "Shrink down and explore how your body fights invaders",
+    icon: "🦠",
+    category: "Science",
+    color: "from-rose-500 to-red-600",
+    prompt: "I want to shrink down and travel inside the human body to explore the immune system! Let's see how it fights germs.",
+    keywords: ["immune", "body", "cells", "virus"],
+    phases: [
+      { name: "Shrink & Enter", turns: "2-3", goal: "You shrink to microscopic size and enter the bloodstream — what do you see? Red blood cells, plasma, platelets whizzing past", generateImage: true, imagePromptHint: "microscopic view inside a human blood vessel with red blood cells flowing past, photorealistic medical illustration" },
+      { name: "The Invasion", turns: "3-4", goal: "A virus or bacteria attacks! How does it get in? What does it look like up close? Macrophages are the first responders — watch them gobble invaders" },
+      { name: "Meet the Army", turns: "3-4", goal: "T cells, B cells, Natural Killer cells — what does each one do? How do they signal each other with cytokines?", generateImage: true, imagePromptHint: "close-up of immune cells — T cells, B cells, and NK cells — in the bloodstream, photorealistic educational illustration" },
+      { name: "The Battle", turns: "3-4", goal: "Full immune response in action — T cells hunting infected cells, B cells making antibodies, fever as a weapon, inflammation signals" },
+      { name: "Victory & Memory", turns: "1-2", goal: "Memory cells remember the invader forever — this is how vaccines work! Present your body journal", generateImage: true, imagePromptHint: "memory B cells and antibodies celebrating victory, with invader bacteria defeated, photorealistic medical illustration" },
+    ],
+  },
+  {
     id: "mystery-novel",
     title: "Mystery Story",
     description: "Write a detective story with twists and clues",
