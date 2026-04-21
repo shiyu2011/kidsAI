@@ -12,8 +12,37 @@ const MAX_BASE_IMAGES = 3;
 const MAX_BONUS_IMAGES = 2;
 const BREAKTHROUGH_THRESHOLD = 3; // breakthrough scores needed per bonus image
 
+// Per-IP rate limit to prevent abuse even with leaked tokens
+const ipRateLimit = new Map<string, { count: number; resetAt: number }>();
+const IP_LIMIT = 10; // max image requests per IP per hour
+const IP_WINDOW_MS = 60 * 60_000;
+
+function getIp(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  return forwarded?.split(",")[0].trim() || "unknown";
+}
+
+function checkIpRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = ipRateLimit.get(ip);
+  if (!entry || now > entry.resetAt) {
+    ipRateLimit.set(ip, { count: 1, resetAt: now + IP_WINDOW_MS });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= IP_LIMIT;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const ip = getIp(request);
+    if (!checkIpRateLimit(ip)) {
+      return new Response(JSON.stringify({ skip: true, reason: "ip-rate-limit" }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const { accessToken } = await request.json();
     if (!accessToken) {
       return new Response(JSON.stringify({ error: "Token required" }), {
@@ -36,6 +65,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Block ended sessions — no image generation for closed sessions
+    if (session.endedAt) {
+      return new Response(JSON.stringify({ skip: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     // Detect project
     const firstKidTurn = session.turns.find((t) => t.role === "kid");
     const project = firstKidTurn ? detectProject(firstKidTurn.content) : null;
@@ -51,6 +87,14 @@ export async function POST(request: NextRequest) {
     });
     const kidTurns = session.turns.filter((t) => t.role === "kid");
     const kidTurnCount = kidTurns.length;
+
+    // Prevent re-generating for the same AI turn (key fix: attacker can't reuse milestone)
+    const lastAiTurn = [...session.turns].reverse().find((t) => t.role === "ai");
+    if (lastAiTurn?.imageUrl) {
+      return new Response(JSON.stringify({ skip: true, reason: "already-has-image" }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     // Count breakthrough scores for bonus images
     const breakthroughCount = session.turns.filter(
@@ -136,9 +180,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Save to the most recent AI turn
-    const lastAiTurn = [...session.turns].reverse().find((t) => t.role === "ai");
-    if (lastAiTurn) {
+    // Save to the most recent AI turn (only if it doesn't already have an image)
+    if (lastAiTurn && !lastAiTurn.imageUrl) {
       await prisma.turn.update({
         where: { id: lastAiTurn.id },
         data: { imageUrl },
