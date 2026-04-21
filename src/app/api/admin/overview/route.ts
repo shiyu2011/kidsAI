@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
   const totalParents = parents.length;
   const totalChildren = parents.reduce((s, p) => s + p.children.length, 0);
   const totalSessions = summary.reduce((s, p) => s + p.totalSessions, 0);
-  const totalMessages = summary.reduce((s, p) => s + p.totalMessages, 0);
+  const totalMessages = summary.reduce((s, p) => s + p.kidMessages, 0);
   const todaySessionsTotal = summary.reduce((s, p) => s + p.todaySessions, 0);
 
   return NextResponse.json({
